@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TransactionType {
+  WITHDRAWAL
+  REVERSAL
+}
+
+enum TransactionStatus {
+  PENDING
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+  REVERSED
+}
+
+enum LedgerEntryType {
+  DEBIT
+  CREDIT
+}
+
+enum OutboxStatus {
+  PENDING
+  PUBLISHED
+  FAILED
+}
+
+model Account {
+  id             String   @id @default(uuid())
+  user_id        String   @unique
+  phone_number   String   @unique
+  full_name      String
+  balance        Decimal  @default(0) @db.Decimal(15, 2)
+  locked_balance Decimal  @default(0) @db.Decimal(15, 2)
+  currency       String   @default("KES")
+  is_active      Boolean  @default(true)
+  version        Int      @default(0)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  transactions   Transaction[]
+  ledger_entries LedgerEntry[]
+
+  @@map("accounts")
+}
+
+model Transaction {
+  id                    String            @id @default(uuid())
+  account_id            String
+  account               Account           @relation(fields: [account_id], references: [id])
+  idempotency_key       String            @unique
+  type                  TransactionType
+  status                TransactionStatus @default(PENDING)
+  amount                Decimal           @db.Decimal(15, 2)
+  currency              String            @default("KES")
+  phone_number          String
+  mpesa_conversation_id String?           @unique
+  mpesa_transaction_id  String?           @unique
+  failure_reason        String?
+  retry_count           Int               @default(0)
+  description           String?
+  completed_at          DateTime?
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+
+  ledger_entries LedgerEntry[]
+  outbox_events  OutboxEvent[]
+
+  @@index([account_id])
+  @@index([status])
+  @@index([created_at])
+  @@index([account_id, status])
+  @@map("transactions")
+}
+
+model LedgerEntry {
+  id             String          @id @default(uuid())
+  transaction_id String
+  transaction    Transaction     @relation(fields: [transaction_id], references: [id])
+  account_id     String
+  account        Account         @relation(fields: [account_id], references: [id])
+  entry_type     LedgerEntryType
+  amount         Decimal         @db.Decimal(15, 2)
+  balance_before Decimal         @db.Decimal(15, 2)
+  balance_after  Decimal         @db.Decimal(15, 2)
+  description    String?
+  created_at     DateTime        @default(now())
+
+  @@index([account_id])
+  @@index([transaction_id])
+  @@map("ledger_entries")
+}
+
+model OutboxEvent {
+  id             String       @id @default(uuid())
+  event_type     String
+  transaction_id String?
+  transaction    Transaction? @relation(fields: [transaction_id], references: [id])
+  payload        Json
+  status         OutboxStatus @default(PENDING)
+  published_at   DateTime?
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
+
+  @@index([status, created_at])
+  @@map("outbox_events")
+}
+
+model DeadLetterJob {
+  id             String   @id @default(uuid())
+  transaction_id String
+  job_type       String
+  job_data       Json
+  failure_reason String
+  failed_at      DateTime
+  resolved       Boolean  @default(false)
+  created_at     DateTime @default(now())
+
+  @@index([resolved])
+  @@index([transaction_id])
+  @@map("dead_letter_jobs")
+}
+
+model ApiKey {
+  id           String    @id @default(uuid())
+  name         String
+  key_hash     String    @unique
+  is_active    Boolean   @default(true)
+  last_used_at DateTime?
+  created_at   DateTime  @default(now())
+
+  @@map("api_keys")
+}
