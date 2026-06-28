@@ -245,6 +245,7 @@ export class WithdrawalsService {
       const balanceBefore = new Prisma.Decimal(existingAccount.balance);
       const refundedBalance = balanceBefore.plus(transaction.amount);
 
+      // ✅ Fixed — was using transaction.account_id before
       await tx.transaction.update({
         where: { id: transactionId },
         data: {
