@@ -10,6 +10,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ApiKeyGuard } from './auth/guard/api-key/api-key.guard';
 import { AccountsModule } from './accounts/accounts.module';
 import { LedgerModule } from './ledger/ledger.module';
+import { WithdrawalsModule } from './withdrawals/withdrawals.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { LedgerModule } from './ledger/ledger.module';
     AuthModule,
     AccountsModule,
     LedgerModule,
+    WithdrawalsModule,
   ],
   controllers: [AppController],
   providers: [
