@@ -175,8 +175,8 @@ export class AccountsService {
         `Account ${accountId} is not active and cannot process withdrawals.`,
       );
 
-    const balance = new Decimal(account.balance);
-    const locked = new Decimal(account.locked_balance);
+    const balance = new Prisma.Decimal(account.balance);
+    const locked = new Prisma.Decimal(account.locked_balance);
     const available = balance.minus(locked);
 
     if (available.lessThan(amount))
@@ -186,8 +186,8 @@ export class AccountsService {
 
     return {
       ...account,
-      balance: new Decimal(account.balance),
-      locked_balance: new Decimal(account.locked_balance),
+      balance: new Prisma.Decimal(account.balance),
+      locked_balance: new Prisma.Decimal(account.locked_balance),
       available_balance: available,
     };
   }
