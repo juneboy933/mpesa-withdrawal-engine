@@ -8,7 +8,6 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { Prisma } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/client';
 @Injectable()
 export class AccountsService {
   private readonly logger = new Logger(AccountsService.name);
@@ -112,8 +111,8 @@ export class AccountsService {
   async getAccountBalance(id: string) {
     const account = await this.getAccountById(id);
 
-    const balance = new Decimal(account.balance);
-    const locked = new Decimal(account.locked_balance);
+    const balance = new Prisma.Decimal(account.balance);
+    const locked = new Prisma.Decimal(account.locked_balance);
     const available = balance.minus(locked);
 
     return {
@@ -145,7 +144,7 @@ export class AccountsService {
   // Validate for withdrawal
   async validateWithdrawal(
     accountId: string,
-    amount: Decimal,
+    amount: Prisma.Decimal,
     tx: Prisma.TransactionClient,
   ) {
     const rows = await tx.$queryRaw<
