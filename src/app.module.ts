@@ -9,6 +9,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
 import { ApiKeyGuard } from './auth/guard/api-key/api-key.guard';
 import { AccountsModule } from './accounts/accounts.module';
+import { LedgerModule } from './ledger/ledger.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { AccountsModule } from './accounts/accounts.module';
     }),
     AuthModule,
     AccountsModule,
+    LedgerModule,
   ],
   controllers: [AppController],
   providers: [
