@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Public } from 'src/common/decorators/public.decorator';
 
@@ -17,7 +17,7 @@ export class AuthController {
     return this.auth.listApiKeys();
   }
 
-  @Delete('keys/:id')
+  @Patch('keys/:id')
   deleteApiKey(@Param('id') id: string) {
     return this.auth.revokeApiKey(id);
   }
