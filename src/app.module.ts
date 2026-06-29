@@ -11,6 +11,7 @@ import { ApiKeyGuard } from './auth/guard/api-key/api-key.guard';
 import { AccountsModule } from './accounts/accounts.module';
 import { LedgerModule } from './ledger/ledger.module';
 import { WithdrawalsModule } from './withdrawals/withdrawals.module';
+import { OutboxModule } from './outbox/outbox.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { WithdrawalsModule } from './withdrawals/withdrawals.module';
     AccountsModule,
     LedgerModule,
     WithdrawalsModule,
+    OutboxModule,
   ],
   controllers: [AppController],
   providers: [
