@@ -33,7 +33,6 @@ export class OutboxService {
       where: { id: eventId },
       data: {
         status: OutboxStatus.FAILED,
-        published_at: new Date(),
       },
     });
 
