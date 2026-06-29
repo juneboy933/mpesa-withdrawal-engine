@@ -12,6 +12,9 @@ import { AccountsModule } from './accounts/accounts.module';
 import { LedgerModule } from './ledger/ledger.module';
 import { WithdrawalsModule } from './withdrawals/withdrawals.module';
 import { OutboxModule } from './outbox/outbox.module';
+import { QueueModule } from './queue/queue.module';
+import { DeadlettersModule } from './deadletters/deadletters.module';
+import { MpesaModule } from './mpesa/mpesa.module';
 
 @Module({
   imports: [
@@ -29,6 +32,9 @@ import { OutboxModule } from './outbox/outbox.module';
     LedgerModule,
     WithdrawalsModule,
     OutboxModule,
+    QueueModule,
+    DeadlettersModule,
+    MpesaModule,
   ],
   controllers: [AppController],
   providers: [
