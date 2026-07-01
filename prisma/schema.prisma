@@ -104,6 +104,8 @@ model OutboxEvent {
   transaction    Transaction? @relation(fields: [transaction_id], references: [id])
   payload        Json
   status         OutboxStatus @default(PENDING)
+  attempts       Int          @default(0)
+  next_retry_at  DateTime?
   published_at   DateTime?
   created_at     DateTime     @default(now())
   updated_at     DateTime     @updatedAt

@@ -234,6 +234,13 @@ export class WithdrawalsService {
     if (transaction.status === TransactionStatus.COMPLETED)
       throw new BadRequestException('Cannot fail a completed transaction');
 
+    if (transaction.status === TransactionStatus.FAILED) {
+      this.logger.warn(
+        `Transaction ${transactionId} is already failed - skipping duplicate failure handling`,
+      );
+      return;
+    }
+
     await this.prisma.$transaction(async (tx) => {
       const existingAccount = await tx.account.findUnique({
         where: { id: transaction.account_id },
@@ -245,7 +252,6 @@ export class WithdrawalsService {
       const balanceBefore = new Prisma.Decimal(existingAccount.balance);
       const refundedBalance = balanceBefore.plus(transaction.amount);
 
-      // ✅ Fixed — was using transaction.account_id before
       await tx.transaction.update({
         where: { id: transactionId },
         data: {

@@ -22,6 +22,8 @@ import { MpesaModule } from './mpesa/mpesa.module';
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: process.env.CI ? [] : ['.env', '.env.local'],
+      ignoreEnvFile: process.env.CI === 'true',
       validationSchema: configSchema,
       validationOptions: {
         abortEarly: true,

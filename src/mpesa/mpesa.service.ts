@@ -1,10 +1,16 @@
-import { HttpException, Injectable, Logger } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { B2CRequestParam, B2CResponse } from './interfaces/mpesa-interface';
 import { MpesaCallbackPayload } from './dto/mpesa-callback.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WithdrawalsService } from 'src/withdrawals/withdrawals.service';
+import { TransactionStatus } from '@prisma/client';
 
 @Injectable()
 export class MpesaService {
@@ -124,7 +130,21 @@ export class MpesaService {
     );
   }
 
-  async handleCallback(payload: MpesaCallbackPayload) {
+  private verifyCallbackAuth(callbackToken?: string) {
+    const callbackSecret = this.config.get<string>('MPESA_CALLBACK_SECRET');
+
+    if (!callbackSecret) {
+      return;
+    }
+
+    if (!callbackToken || callbackToken !== callbackSecret) {
+      this.logger.warn('Invalid M-Pesa callback token received');
+      throw new UnauthorizedException('Invalid M-Pesa callback token');
+    }
+  }
+
+  async handleCallback(payload: MpesaCallbackPayload, callbackToken?: string) {
+    this.verifyCallbackAuth(callbackToken);
     this.logger.log(`MPesa callback received: ${JSON.stringify(payload)}`);
 
     if (!this.verifyCallbackStructure(payload)) {
@@ -144,6 +164,20 @@ export class MpesaService {
         `No transaction found for ConversationID: ${ConversationID}`,
       );
 
+      return { ResultCode: 0, ResultDesc: 'Accepted' };
+    }
+
+    if (transaction.status === TransactionStatus.COMPLETED) {
+      this.logger.warn(
+        `Duplicate M-Pesa callback for completed transaction ${transaction.id}`,
+      );
+      return { ResultCode: 0, ResultDesc: 'Accepted' };
+    }
+
+    if (transaction.status === TransactionStatus.FAILED) {
+      this.logger.warn(
+        `Out-of-order M-Pesa callback for already failed transaction ${transaction.id}`,
+      );
       return { ResultCode: 0, ResultDesc: 'Accepted' };
     }
 

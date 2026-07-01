@@ -44,12 +44,32 @@ export class OutboxProcessor {
             this.logger.log(
               `Outbox event ${event.id} published — transaction ${event.transaction_id}`,
             );
+            continue;
           }
-        } catch (error) {
-          this.logger.error(
-            `Failed to publish outbox event ${event.id}: ${error}`,
+
+          this.logger.warn(
+            `Unsupported outbox event type ${event.event_type} for event ${event.id}`,
           );
-          await this.outbox.markFailed(event.id);
+          await this.outbox.markPublishAttempt(
+            event.id,
+            event.attempts + 1,
+            30,
+          );
+        } catch (error) {
+          const attempts = (event.attempts ?? 0) + 1;
+          this.logger.error(
+            `Failed to publish outbox event ${event.id} (attempt ${attempts}): ${error}`,
+          );
+
+          if (attempts >= 5) {
+            await this.outbox.markFailed(event.id);
+          } else {
+            await this.outbox.markPublishAttempt(
+              event.id,
+              attempts,
+              15 * attempts,
+            );
+          }
         }
       }
     } finally {

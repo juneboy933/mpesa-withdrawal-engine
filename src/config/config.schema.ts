@@ -19,6 +19,7 @@ export const configSchema = Joi.object({
   MPESA_SECURITY_CREDENTIAL: Joi.string().required(),
   MPESA_SHORTCODE: Joi.string().required(),
   MPESA_CALLBACK_URL: Joi.string().required(),
+  MPESA_CALLBACK_SECRET: Joi.string().optional(),
 
   API_KEY_SECRET: Joi.string().required(),
 });

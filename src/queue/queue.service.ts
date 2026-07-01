@@ -17,8 +17,8 @@ export class QueueService {
         type: 'exponential',
         delay: 2000,
       },
-      removeOnComplete: false,
-      removeOnFail: false,
+      removeOnComplete: { age: 86400 },
+      removeOnFail: { age: 259200 },
     });
 
     this.logger.log(
@@ -26,5 +26,15 @@ export class QueueService {
     );
 
     return job;
+  }
+
+  async checkConnection() {
+    try {
+      await this.payoutQueue.client;
+      return true;
+    } catch (error) {
+      this.logger.error(`Queue connection health check failed: ${error}`);
+      return false;
+    }
   }
 }

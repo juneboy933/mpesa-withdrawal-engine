@@ -7,10 +7,13 @@ export class OutboxService {
   private readonly logger = new Logger(OutboxService.name);
   constructor(private readonly prisma: PrismaService) {}
 
-  //   Get all pending events
+  //   Get all pending events that are ready to retry
   async getPendingEvents(limit = 10) {
     return await this.prisma.outboxEvent.findMany({
-      where: { status: OutboxStatus.PENDING },
+      where: {
+        status: OutboxStatus.PENDING,
+        OR: [{ next_retry_at: null }, { next_retry_at: { lte: new Date() } }],
+      },
       orderBy: { created_at: 'asc' },
       take: limit,
     });
@@ -23,6 +26,20 @@ export class OutboxService {
       data: {
         status: OutboxStatus.PUBLISHED,
         published_at: new Date(),
+      },
+    });
+  }
+
+  async markPublishAttempt(
+    eventId: string,
+    attempts: number,
+    retryDelaySeconds = 10,
+  ) {
+    await this.prisma.outboxEvent.update({
+      where: { id: eventId },
+      data: {
+        attempts,
+        next_retry_at: new Date(Date.now() + retryDelaySeconds * 1000),
       },
     });
   }
